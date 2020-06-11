@@ -1,6 +1,15 @@
 #define TESLA_INIT_IMPL // If you have more than one file using the tesla header, only define this in the main one
 #include <tesla.hpp>    // The Tesla Header
 
+#define VERSION "1.0.0"
+
+#define LOGFILE "/switch/Cling-Wrap/log.txt"
+
+#define BOOTLOADERPATH "/bootloader"
+#define ALTBOOTLOADERPATH "/_bootloader"
+
+#define KIPSPATH "/atmosphere/kips"   
+#define ALTKIPSPATH "/atmosphere/_kips"
 
 class GuiTest : public tsl::Gui {
 public:
@@ -11,7 +20,7 @@ public:
     virtual tsl::elm::Element* createUI() override {
         // A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
         // If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-        auto frame = new tsl::elm::OverlayFrame("Tesla Example", "v1.3.1");
+        auto frame = new tsl::elm::OverlayFrame("Cling Wrap", VERSION);
 
         // A list that can contain sub elements and handles scrolling
         auto list = new tsl::elm::List();
