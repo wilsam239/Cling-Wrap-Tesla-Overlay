@@ -1,10 +1,10 @@
-
 build/
-
-*.ovl
-
+.vscode/
+art/
 *.elf
-
+*.nrp
 *.nacp
-
 *.nro
+*.zip
+*.png
+*.ai
