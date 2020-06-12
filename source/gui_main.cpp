@@ -11,7 +11,7 @@ GuiMain::GuiMain() {
     Result rc = fsOpenSdCardFileSystem(&this->m_fs);
     if (R_FAILED(rc))
         return;
-        
+
     this->updateStatus();
 }
 
@@ -109,7 +109,7 @@ void GuiMain::updateStatus() {
     }
     //this->tinfoilReady = status::ready;
     //this->tinfoilReadyItem->setText(this->getText());
-    //std::string text = this->getText();
+    std::string text = this->getText();
     //this->tinfoilReadyItem->setText(text);
 }
 
