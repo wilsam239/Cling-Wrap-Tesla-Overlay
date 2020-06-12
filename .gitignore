@@ -4,6 +4,7 @@ art/
 *.elf
 *.nrp
 *.nacp
+*.ovl
 *.nro
 *.zip
 *.png
