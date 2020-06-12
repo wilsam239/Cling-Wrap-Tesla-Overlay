@@ -11,9 +11,8 @@ GuiMain::GuiMain() {
     Result rc = fsOpenSdCardFileSystem(&this->m_fs);
     if (R_FAILED(rc))
         return;
-
-    this->tinfoilReady = status::notReady;
-    //this->updateStatus();
+        
+    this->updateStatus();
 }
 
 GuiMain::~GuiMain() { 
@@ -99,7 +98,7 @@ void GuiMain::update() {
 
 void GuiMain::updateStatus() {
     //writeToLog("Checking if /bootloader or /_bootloader exists.");
-    /*if(this->FS_DirExists(&this->m_fs, BOOTLOADERPATH)) {
+    if(this->FS_DirExists(&this->m_fs, BOOTLOADERPATH)) {
         //writeToLog("/bootloader path exists");
         this->tinfoilReady = status::notReady;
     } else if (FS_DirExists(&this->m_fs, ALTBOOTLOADERPATH)) {
@@ -107,11 +106,11 @@ void GuiMain::updateStatus() {
         this->tinfoilReady = status::ready;
     } else {
         this->tinfoilReady = status::error;
-    }*/
+    }
     //this->tinfoilReady = status::ready;
     //this->tinfoilReadyItem->setText(this->getText());
-    std::string text = this->getText();
-    this->tinfoilReadyItem->setText(text);
+    //std::string text = this->getText();
+    //this->tinfoilReadyItem->setText(text);
 }
 
 /**
