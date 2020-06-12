@@ -58,6 +58,10 @@ tsl::elm::Element *GuiMain::createUI() {
     } else {
         tsl::elm::List *dirList = new tsl::elm::List();
 
+        dirList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString("\uE016  Wrapped = Ready for Tinfoil\n\uE016  Unwrapped = Ready for Boot", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+        }), 50);
+
         auto *readyAllButton = new tsl::elm::ListItem("Wrap");
         readyAllButton->setClickListener([this](u64 keys) -> bool { 
             if(keys & KEY_A) {
