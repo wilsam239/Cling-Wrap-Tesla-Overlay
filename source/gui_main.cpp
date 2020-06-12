@@ -4,9 +4,9 @@
 #include <fstream>
 
 constexpr const char *const descriptions[3] = {
-    [0] = "Unwrapped | \uE098",
-    [1] = "Wrapped | \uE098",
-    [2] = "Error | \uE0F4",
+    [0] = "Unwrapped | \uE14C",
+    [1] = "Wrapped | \uE14B",
+    [2] = "Error | \uE150",
     
 };
 
@@ -59,7 +59,7 @@ tsl::elm::Element *GuiMain::createUI() {
         tsl::elm::List *dirList = new tsl::elm::List();
 
         dirList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  Wrapped = Ready for Tinfoil\n\uE016  Unwrapped = Ready for Boot", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("\uE142  Wrapped = Ready for Tinfoil\n\uE142  Unwrapped = Ready for Boot", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
         }), 50);
 
         auto *readyAllButton = new tsl::elm::ListItem("Wrap");
@@ -83,7 +83,7 @@ tsl::elm::Element *GuiMain::createUI() {
         dirList->addItem(resetAllButton);
 
         dirList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("\uE016  These directories can be renamed individually.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("\uE142  These directories can be renamed individually.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
         }), 30);
 
         for (const auto &dir : this->directoryListItems) {
