@@ -4,8 +4,8 @@
 #include <fstream>
 
 constexpr const char *const descriptions[3] = {
-    [0] = "Not Ready | \uE098",
-    [1] = "Ready | \uE098",
+    [0] = "Unwrapped | \uE098",
+    [1] = "Wrapped | \uE098",
     [2] = "Error | \uE0F4",
     
 };
@@ -18,20 +18,13 @@ GuiMain::GuiMain() {
     directory bootloader = {
         .dirName = "Bootloader",
         .listItem = new tsl::elm::ListItem(bootloader.dirName),
-        .dirStatus = status::notReady,
         .dirPath = BOOTLOADERPATH,
         .altPath = ALTBOOTLOADERPATH
     };
 
-    bootloader.listItem->setClickListener([this, &bootloader](u64 keys) -> bool {
+    bootloader.listItem->setClickListener([this, bootloader](u64 keys) -> bool {
         if(keys & KEY_A) {
-            if(bootloader.dirStatus == status::ready) {
-                nxfs::rename(bootloader.altPath, bootloader.dirPath);
-                bootloader.setStatus(status::notReady);
-            } else if(bootloader.dirStatus == status::notReady) {
-                nxfs::rename(bootloader.dirPath, bootloader.altPath);
-                bootloader.setStatus(status::ready);
-            }
+            rename(bootloader);
             return true;
         }
         return false;
@@ -43,19 +36,6 @@ GuiMain::GuiMain() {
 GuiMain::~GuiMain() { 
     fsFsClose(&this->m_fs);
 }
-
-/*void writeToLog(std::string msg) {
-    std::ofstream logFile;
-    logFile.open(LOGFILE, std::ofstream::out | std::ofstream::app);
-
-    const auto p1 = std::chrono::system_clock::now();
-    std::time_t today_time = std::chrono::system_clock::to_time_t(p1);
-
-    if(logFile.is_open()) {
-        logFile << msg << " - " << std::ctime(&today_time);
-    }
-    logFile.close();
-}*/
 
 // Called when this Gui gets loaded to create the UI
 // Allocate all elements on the heap. libtesla will make sure to clean them up when not needed anymore
@@ -78,35 +58,25 @@ tsl::elm::Element *GuiMain::createUI() {
     } else {
         tsl::elm::List *dirList = new tsl::elm::List();
 
-        auto *readyAllButton = new tsl::elm::ListItem("Ready All");
+        auto *readyAllButton = new tsl::elm::ListItem("Wrap");
         readyAllButton->setClickListener([this](u64 keys) -> bool { 
             if(keys & KEY_A) {
-                for (auto &dir : this->directoryListItems) {
-                    if(dir.dirStatus == status::notReady) {
-                        nxfs::rename(dir.dirPath, dir.altPath);
-                        dir.setStatus(status::ready);
-                    }
-                }
+                renameAll(status::wrapped);
                 return true;
             }
             return false;
         });
         dirList->addItem(readyAllButton);
 
-        auto *unreadyAllButton = new tsl::elm::ListItem("Unready All");
-        unreadyAllButton->setClickListener([this](u64 keys) -> bool { 
+        auto *resetAllButton = new tsl::elm::ListItem("Unwrap");
+        resetAllButton->setClickListener([this](u64 keys) -> bool { 
             if(keys & KEY_A) {
-                for (auto &dir : this->directoryListItems) {
-                    if(dir.dirStatus == status::ready) {
-                        nxfs::rename(dir.altPath, dir.dirPath);
-                        dir.setStatus(status::notReady);
-                    }
-                }
+                renameAll(status::unwrapped);
                 return true;
             }
             return false;
         });
-        dirList->addItem(unreadyAllButton);
+        dirList->addItem(resetAllButton);
 
         dirList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString("\uE016  These directories can be renamed individually.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
@@ -138,8 +108,21 @@ void GuiMain::update() {
 
 void GuiMain::updateStatus(const directory &dir) {
 
-    const char *desc = descriptions[dir.dirStatus];
+    const char *desc = descriptions[this->getStatus(dir)];
     dir.listItem->setValue(desc);
+}
+
+status GuiMain::getStatus(const directory &dir) {
+    const char *path = dir.dirPath.c_str();
+    const char *alt = dir.altPath.c_str();
+
+    if(this->FS_DirExists(&this->m_fs, path)) {
+        return status::unwrapped;
+    } else if(this->FS_DirExists(&this->m_fs, alt)) {
+        return status::wrapped;
+    } else {
+        return status::error;
+    }
 }
 
 /**
@@ -185,26 +168,41 @@ Result GuiMain::FS_RenameDir(FsFileSystem *fs, const char *old_dirname, const ch
 	return 0;
 }
 
-std::string GuiMain::getText() {
-    std::string itemText;
-    switch (this->tinfoilReady) {
-        case status::ready:
-            itemText = "Tinfoil Ready";
-            break;
-        case status::notReady:
-            itemText = "Not Tinfoil Ready";
-            break;
-        case status::error:
-            itemText = "An error occurred";
-            break;
-        default:
-            itemText = "Default case used. (This shouldn't happen)";
+
+void GuiMain::rename(const directory &dir) {
+    const char *path = dir.dirPath.c_str();
+    const char *alt = dir.altPath.c_str();
+
+    if(this->FS_DirExists(&this->m_fs, path)) {
+        if(FS_RenameDir(&this->m_fs, path, alt) == 0) {
+            // Success
+        }
+    } else if(this->FS_DirExists(&this->m_fs, alt)) {
+        if(FS_RenameDir(&this->m_fs, alt, path) == 0) {
+            // Success
+        }
     }
-    //return this->tinfoilReady == error ? "An Error Occurred" : this->tinfoilReady == ready ? "Tinfoil Ready" : "Not Tinfoil Ready";
-    return itemText;
 }
 
-// Called once every frame to handle inputs not handled by other UI elements
-/*virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-    return false;   // Return true here to singal the inputs have been consumed
-}*/
+void GuiMain::renameAll(status s) {
+    //Rename all folders so that they are in the s status
+    //wrapped = alt path present
+    //unwrapped = path present
+    for (const auto &dir : this->directoryListItems) {
+        const char *path = dir.dirPath.c_str();
+        const char *alt = dir.altPath.c_str();
+        if(s == status::wrapped) {
+            if(this->FS_DirExists(&this->m_fs, path)) {
+                if(FS_RenameDir(&this->m_fs, path, alt) == 0) {
+                    // Success
+                }
+            }
+        } else if (s == status::unwrapped) {
+            if(this->FS_DirExists(&this->m_fs, alt)) {
+                if(FS_RenameDir(&this->m_fs, alt, path) == 0) {
+                    // Success
+                }
+            }
+        }
+    }
+}

@@ -16,24 +16,25 @@
 namespace nxfs = std::filesystem;
 
 enum status {
-    notReady = 0,
-    ready = 1,
+    unwrapped = 0,
+    wrapped = 1,
     error = 2
 };
 
 struct directory {
     std::string dirName;
     tsl::elm::ListItem *listItem;
-    status dirStatus;
     nxfs::path dirPath;
     nxfs::path altPath;
 
-    void setStatus(status s) {
-        dirStatus = s;
-    }
-
     std::string getName() {
         return dirName;
+    }
+    const std::string getPath() {
+        return dirPath;
+    }
+    std::string getAltPath() {
+        return altPath;
     }
 };
 
@@ -54,7 +55,11 @@ class GuiMain : public tsl::Gui {
 
   private:
     void updateStatus(const directory &dir);
+    status getStatus(const directory &dir);
+
     bool FS_DirExists(FsFileSystem *fs, const char *path);
     Result FS_RenameDir(FsFileSystem *fs, const char *old_dirname, const char *new_dirname);
-    std::string getText();
+
+    void rename(const directory &dir);
+    void renameAll(status s);
 };
