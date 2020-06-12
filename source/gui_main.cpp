@@ -2,17 +2,42 @@
 #include <tesla.hpp>    // The Tesla Header
 #include <sstream>
 #include <fstream>
-#include <filesystem>
 
-namespace nxfs = std::filesystem;
-
+constexpr const char *const descriptions[3] = {
+    [0] = "Not Ready | \uE098",
+    [1] = "Ready | \uE098",
+    [2] = "Error | \uE0F4",
+    
+};
 
 GuiMain::GuiMain() {
     Result rc = fsOpenSdCardFileSystem(&this->m_fs);
     if (R_FAILED(rc))
         return;
 
-    this->updateStatus();
+    directory bootloader = {
+        .dirName = "Bootloader",
+        .listItem = new tsl::elm::ListItem(bootloader.dirName),
+        .dirStatus = status::notReady,
+        .dirPath = BOOTLOADERPATH,
+        .altPath = ALTBOOTLOADERPATH
+    };
+
+    bootloader.listItem->setClickListener([this, &bootloader](u64 keys) -> bool {
+        if(keys & KEY_A) {
+            if(bootloader.dirStatus == status::ready) {
+                nxfs::rename(bootloader.altPath, bootloader.dirPath);
+                bootloader.setStatus(status::notReady);
+            } else if(bootloader.dirStatus == status::notReady) {
+                nxfs::rename(bootloader.dirPath, bootloader.altPath);
+                bootloader.setStatus(status::ready);
+            }
+            return true;
+        }
+        return false;
+    });
+    this->directoryListItems.push_back(std::move(bootloader));
+    this->scanned = true;
 }
 
 GuiMain::~GuiMain() { 
@@ -39,51 +64,64 @@ tsl::elm::Element *GuiMain::createUI() {
 
     // A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
     // If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-    auto frame = new tsl::elm::OverlayFrame("Cling Wrap", VERSION);
+    tsl::elm::OverlayFrame *rootFrame = new tsl::elm::OverlayFrame("Cling Wrap", VERSION);
 
-    // A list that can contain sub elements and handles scrolling
-    auto list = new tsl::elm::List();
+    if(this->directoryListItems.size() == 0) {
+        const char *description = this->scanned ? "No conflicting folders found!" : "Scan failed!";
 
-    //writeToLog("Retreived tinfoil status");
-    this->tinfoilReadyItem = new tsl::elm::ListItem(this->getText());
-    /*tinfoilReadyItem->setClickListener([this](u64 keys) { 
-        if (keys & KEY_A) {
-            // Create char arrays for the old and new paths of files that need to be renamed
-           // nxfs::path oldPath, newPath;
+        auto *warning = new tsl::elm::CustomDrawer([description](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString("\uE150", false, 180, 250, 90, renderer->a(0xFFFF));
+            renderer->drawString(description, false, 110, 340, 25, renderer->a(0xFFFF));
+        });
 
-            //this->tinfoilReady = this->tinfoilReady == error ? error : this->tinfoilReady == ready ? notReady : ready;
-            //this->tinfoilReadyItem->setText(this->getText());
-            // Set the old and new path's according to the devices tinfoilReady status
-            /*if(this->tinfoilReady) {
-                //writeToLog("Determined that the folder is currently /_bootloader and therefore ready for tinfoil use.");
-                oldPath = ALTBOOTLOADERPATH;
-                newPath = BOOTLOADERPATH;
-                //writeToLog("Prepared old and new path strings.");
-                this->tinfoilReady = false;
-            } else {
-                //writeToLog("Determined that the folder is currently /bootloader and therefore not ready for tinfoil use.");
-                oldPath = BOOTLOADERPATH;
-                newPath = ALTBOOTLOADERPATH;
-                //writeToLog("Prepared old and new path strings.");
-                this->tinfoilReady = true;
+        rootFrame->setContent(warning);
+    } else {
+        tsl::elm::List *dirList = new tsl::elm::List();
+
+        auto *readyAllButton = new tsl::elm::ListItem("Ready All");
+        readyAllButton->setClickListener([this](u64 keys) -> bool { 
+            if(keys & KEY_A) {
+                for (auto &dir : this->directoryListItems) {
+                    if(dir.dirStatus == status::notReady) {
+                        nxfs::rename(dir.dirPath, dir.altPath);
+                        dir.setStatus(status::ready);
+                    }
+                }
+                return true;
             }
-            
-            nxfs::rename(oldPath, newPath);
-            //writeToLog("Renaming successful.");
-            
-            return true;
+            return false;
+        });
+        dirList->addItem(readyAllButton);
+
+        auto *unreadyAllButton = new tsl::elm::ListItem("Unready All");
+        unreadyAllButton->setClickListener([this](u64 keys) -> bool { 
+            if(keys & KEY_A) {
+                for (auto &dir : this->directoryListItems) {
+                    if(dir.dirStatus == status::ready) {
+                        nxfs::rename(dir.altPath, dir.dirPath);
+                        dir.setStatus(status::notReady);
+                    }
+                }
+                return true;
+            }
+            return false;
+        });
+        dirList->addItem(unreadyAllButton);
+
+        dirList->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString("\uE016  These directories can be renamed individually.", false, x + 5, y + 20, 15, renderer->a(tsl::style::color::ColorDescription));
+        }), 30);
+
+        for (const auto &dir : this->directoryListItems) {
+            dirList->addItem(dir.listItem);
         }
 
-        return false;
-    });*/
+        // Add the list to the frame for it to be drawn
+        rootFrame->setContent(dirList);
+    }
 
-    list->addItem(tinfoilReadyItem);
-
-    // Add the list to the frame for it to be drawn
-    frame->setContent(list);
-    
     // Return the frame to have it become the top level element of this Gui
-    return frame;
+    return rootFrame;
 }
 
 // Called once every frame to update values
@@ -93,24 +131,15 @@ void GuiMain::update() {
     if (counter++ % 20 != 0) 
         return;
     
-    //this->updateStatus();
+    for (const auto &dir : this->directoryListItems) {
+        this->updateStatus(dir);
+    }
 }
 
-void GuiMain::updateStatus() {
-    //writeToLog("Checking if /bootloader or /_bootloader exists.");
-    if(this->FS_DirExists(&this->m_fs, BOOTLOADERPATH)) {
-        //writeToLog("/bootloader path exists");
-        this->tinfoilReady = status::notReady;
-    } else if (FS_DirExists(&this->m_fs, ALTBOOTLOADERPATH)) {
-        //writeToLog("/_bootloader path exists");
-        this->tinfoilReady = status::ready;
-    } else {
-        this->tinfoilReady = status::error;
-    }
-    //this->tinfoilReady = status::ready;
-    //this->tinfoilReadyItem->setText(this->getText());
-    std::string text = this->getText();
-    //this->tinfoilReadyItem->setText(text);
+void GuiMain::updateStatus(const directory &dir) {
+
+    const char *desc = descriptions[dir.dirStatus];
+    dir.listItem->setValue(desc);
 }
 
 /**
