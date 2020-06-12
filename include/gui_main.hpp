@@ -16,7 +16,6 @@ enum status {
     ready = 1,
     notReady = 0,
     error = -1
-
 };
 
 class GuiMain : public tsl::Gui {

@@ -12,7 +12,8 @@ GuiMain::GuiMain() {
     if (R_FAILED(rc))
         return;
 
-    this->updateStatus();
+    this->tinfoilReady = status::notReady;
+    //this->updateStatus();
 }
 
 GuiMain::~GuiMain() { 
@@ -45,15 +46,14 @@ tsl::elm::Element *GuiMain::createUI() {
     auto list = new tsl::elm::List();
 
     //writeToLog("Retreived tinfoil status");
-    //std::string itemText = this->tinfoilReady == error ? "An Error Occurred" : this->tinfoilReady ? "Tinfoil Ready" : "Not Tinfoil Ready";
     this->tinfoilReadyItem = new tsl::elm::ListItem(this->getText());
-    tinfoilReadyItem->setClickListener([this](u64 keys) { 
+    /*tinfoilReadyItem->setClickListener([this](u64 keys) { 
         if (keys & KEY_A) {
             // Create char arrays for the old and new paths of files that need to be renamed
            // nxfs::path oldPath, newPath;
 
-            this->tinfoilReady = this->tinfoilReady == error ? error : this->tinfoilReady == ready ? notReady : ready;
-            this->tinfoilReadyItem->setText(this->getText());
+            //this->tinfoilReady = this->tinfoilReady == error ? error : this->tinfoilReady == ready ? notReady : ready;
+            //this->tinfoilReadyItem->setText(this->getText());
             // Set the old and new path's according to the devices tinfoilReady status
             /*if(this->tinfoilReady) {
                 //writeToLog("Determined that the folder is currently /_bootloader and therefore ready for tinfoil use.");
@@ -71,12 +71,12 @@ tsl::elm::Element *GuiMain::createUI() {
             
             nxfs::rename(oldPath, newPath);
             //writeToLog("Renaming successful.");
-            */
+            
             return true;
         }
 
         return false;
-    });
+    });*/
 
     list->addItem(tinfoilReadyItem);
 
@@ -94,21 +94,24 @@ void GuiMain::update() {
     if (counter++ % 20 != 0) 
         return;
     
-    this->updateStatus();
+    //this->updateStatus();
 }
 
 void GuiMain::updateStatus() {
     //writeToLog("Checking if /bootloader or /_bootloader exists.");
-    if(this->FS_DirExists(&this->m_fs, BOOTLOADERPATH)) {
+    /*if(this->FS_DirExists(&this->m_fs, BOOTLOADERPATH)) {
         //writeToLog("/bootloader path exists");
-        this->tinfoilReady = notReady;
+        this->tinfoilReady = status::notReady;
     } else if (FS_DirExists(&this->m_fs, ALTBOOTLOADERPATH)) {
         //writeToLog("/_bootloader path exists");
-        this->tinfoilReady = ready;
+        this->tinfoilReady = status::ready;
     } else {
-        this->tinfoilReady = error;
-    }
-    this->tinfoilReadyItem->setText(this->getText());
+        this->tinfoilReady = status::error;
+    }*/
+    //this->tinfoilReady = status::ready;
+    //this->tinfoilReadyItem->setText(this->getText());
+    std::string text = this->getText();
+    this->tinfoilReadyItem->setText(text);
 }
 
 /**
@@ -155,7 +158,22 @@ Result GuiMain::FS_RenameDir(FsFileSystem *fs, const char *old_dirname, const ch
 }
 
 std::string GuiMain::getText() {
-    return this->tinfoilReady == error ? "An Error Occurred" : this->tinfoilReady == ready ? "Tinfoil Ready" : "Not Tinfoil Ready";
+    std::string itemText;
+    switch (this->tinfoilReady) {
+        case status::ready:
+            itemText = "Tinfoil Ready";
+            break;
+        case status::notReady:
+            itemText = "Not Tinfoil Ready";
+            break;
+        case status::error:
+            itemText = "An error occurred";
+            break;
+        default:
+            itemText = "Default case used. (This shouldn't happen)";
+    }
+    //return this->tinfoilReady == error ? "An Error Occurred" : this->tinfoilReady == ready ? "Tinfoil Ready" : "Not Tinfoil Ready";
+    return itemText;
 }
 
 // Called once every frame to handle inputs not handled by other UI elements
