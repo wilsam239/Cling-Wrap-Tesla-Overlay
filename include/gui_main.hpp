@@ -3,22 +3,17 @@
 #include <tesla.hpp>
 #include <filesystem>
 
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 
 #define LOGFILE "/config/Cling-Wrap/overlayLog.txt"
-
-#define BOOTLOADERPATH "/bootloader"
-#define ALTBOOTLOADERPATH "/_bootloader"
-
-#define KIPSPATH "/atmosphere/kips"   
-#define ALTKIPSPATH "/atmosphere/_kips"
 
 namespace nxfs = std::filesystem;
 
 enum status {
     unwrapped = 0,
     wrapped = 1,
-    error = 2
+    bothPresent = 2,
+    neitherPresent = 3
 };
 
 struct directory {

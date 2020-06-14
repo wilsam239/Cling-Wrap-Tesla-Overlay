@@ -15,7 +15,7 @@ Specifically, it renames the `bootloader` folder.
 In the event that the app crashes during use, be sure to rename the files manually by inserting your SD card into a computer. Also be sure to upload your log.txt file (found in the Cling Wrap nro folder) as an issue on GitHub.
 
 ## How to install
-Copy the `ovlClingWrap.ovl` file to `/switch/.overlays` in your sdcard
+Copy the `ovlClingWrap.ovl` file to `/switch/.overlays/` in your sdcard
 
 ## Screenshots
 

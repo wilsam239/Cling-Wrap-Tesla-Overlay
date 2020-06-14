@@ -38,7 +38,8 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	Cling Wrap
-APP_VERSION :=	1.0.0
+APP_VERSION :=	1.0.1
+APP_AUTHOR  :=  Acta 
 
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
