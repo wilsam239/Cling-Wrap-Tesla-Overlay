@@ -15,11 +15,11 @@ constexpr const char *const descriptions[4] = {
 constexpr const char *const paths[2][2] = {
     [0] = {
         [0] = "/bootloader",
-        [1] = "/_bootloader",
+        [1] = "/_bootloade",
     },
     [1] = {
         [0] = "/atmosphere/kips",
-        [1] = "/atmosphere/_kips"
+        [1] = "/atmosphere/_kip"
     },
 };
 
