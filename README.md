@@ -1,7 +1,9 @@
-# Cling Wrap Tesla Overlay
+# Cling Wrap Tesla Overlay (Deprecated - See Below)
 <p align="center">
 <img src = "https://user-images.githubusercontent.com/11286118/84357080-6e643c00-ac08-11ea-9435-19f116d0477e.png"\><br>
 <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/wilsam239/Cling-Wrap-Tesla-Overlay/total">
+
+## A few versions of Tinfoil ago, the developer removed the checks that this overlay snuck around. It is no longer necessary to use this tool.
 
 A Nintendo Switch Tesla Overlay to enable Tinfoil to be run on devices with hekate (without the custom fork) by renaming folders that Tinfoil looks for on your SD card so that it can be run.
 
